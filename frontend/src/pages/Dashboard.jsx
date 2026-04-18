@@ -1,59 +1,61 @@
 import { Link } from 'react-router-dom'
 import {
   Activity, Heart, Droplets, Weight, Stethoscope, MapPin,
-  ShoppingBag, File , AlertTriangle, TrendingUp, TrendingDown,
+  ShoppingBag, File, AlertTriangle, TrendingUp, TrendingDown,
   Clock, Loader2, RefreshCw, PlusCircle, ChevronRight
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts'
 import { format } from 'date-fns'
 
-// ── Mini sparkline chart ─────────────────────────────────────────────────────
-const MiniChart = ({ data, dataKey, color }) => (
-  <ResponsiveContainer width="100%" height={50}>
-    <LineChart data={data}>
-      <Line
-        type="monotone" dataKey={dataKey} stroke={color}
-        strokeWidth={2} dot={false} connectNulls
-      />
-      <Tooltip
-        contentStyle={{
-          background: 'rgba(15,23,42,0.95)',
-          border: '1px solid rgba(52,211,153,0.2)',
-          borderRadius: '8px', fontSize: '11px', color: '#e2e8f0'
-        }}
-        labelFormatter={(v) => v || ''}
-        formatter={(val) => [val ?? '—', '']}
-      />
-    </LineChart>
-  </ResponsiveContainer>
-)
+// ── Mini sparkline ───────────────────────────────────────────────────────────
+const MiniChart = ({ data, dataKey, color }) => {
+  // Only render if we have at least 2 non-null points for this metric
+  const hasData = data.filter(d => d[dataKey] != null).length >= 2
+  if (!hasData) return null
+  return (
+    <ResponsiveContainer width="100%" height={50}>
+      <LineChart data={data}>
+        <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} dot={false} connectNulls />
+        <Tooltip
+          contentStyle={{
+            background: 'rgba(15,23,42,0.95)',
+            border: '1px solid rgba(52,211,153,0.2)',
+            borderRadius: '8px', fontSize: '11px', color: '#e2e8f0'
+          }}
+          labelFormatter={(v) => v || ''}
+          formatter={(val) => [val ?? '—', '']}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}
 
 // ── Quick action cards ───────────────────────────────────────────────────────
 const quickLinks = [
-  { to: '/health-assistent',     icon: Stethoscope, label: 'Symptom Checker', desc: 'AI diagnosis help',  color: 'from-pink-500/20 to-rose-500/10',   iconColor: 'text-pink-400',   border: 'border-pink-500/20'   },
-  { to: '/hospitals',    icon: MapPin,      label: 'Find Hospital',   desc: 'Nearest facilities', color: 'from-indigo-500/20 to-blue-500/10', iconColor: 'text-indigo-400', border: 'border-indigo-500/20' },
-  { to: '/document', icon: File,       label: 'Upload Document',    desc: 'See & Upload',       color: 'from-teal-500/20 to-cyan-500/10',   iconColor: 'text-teal-400',   border: 'border-teal-500/20'   },
-  { to: '/pharmacy',     icon: ShoppingBag, label: 'Order Medicine',  desc: 'Fast delivery',      color: 'from-orange-500/20 to-amber-500/10',iconColor: 'text-orange-400', border: 'border-orange-500/20' },
+  { to: '/health-assistent', icon: Stethoscope, label: 'Symptom Checker', desc: 'AI diagnosis help',  color: 'from-pink-500/20 to-rose-500/10',    iconColor: 'text-pink-400',   border: 'border-pink-500/20'   },
+  { to: '/hospitals',        icon: MapPin,      label: 'Find Hospital',   desc: 'Nearest facilities', color: 'from-indigo-500/20 to-blue-500/10',  iconColor: 'text-indigo-400', border: 'border-indigo-500/20' },
+  { to: '/document',         icon: File,        label: 'Upload Document', desc: 'See & Upload',       color: 'from-teal-500/20 to-cyan-500/10',    iconColor: 'text-teal-400',   border: 'border-teal-500/20'   },
+  { to: '/pharmacy',         icon: ShoppingBag, label: 'Order Medicine',  desc: 'Fast delivery',      color: 'from-orange-500/20 to-amber-500/10', iconColor: 'text-orange-400', border: 'border-orange-500/20' },
 ]
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Category helpers ─────────────────────────────────────────────────────────
 const bpCategory = (sys) => {
-  if (!sys) return { label: '—', color: 'text-slate-400' }
-  if (sys < 120) return { label: 'Normal',    color: 'text-emerald-400' }
-  if (sys < 130) return { label: 'Elevated',  color: 'text-yellow-400'  }
-  if (sys < 140) return { label: 'High I',    color: 'text-orange-400'  }
-  return              { label: 'High II',     color: 'text-red-400'     }
+  if (sys == null) return { label: '—', color: 'text-slate-400' }
+  if (sys < 120)   return { label: 'Normal',  color: 'text-emerald-400' }
+  if (sys < 130)   return { label: 'Elevated', color: 'text-yellow-400' }
+  if (sys < 140)   return { label: 'High I',   color: 'text-orange-400' }
+  return                  { label: 'High II',  color: 'text-red-400'    }
 }
 const sugarCategory = (s) => {
-  if (!s) return { label: '—', color: 'text-slate-400' }
-  if (s < 100) return { label: 'Normal',    color: 'text-emerald-400' }
-  if (s < 126) return { label: 'Pre-Diab.', color: 'text-yellow-400'  }
-  return             { label: 'Diabetic',   color: 'text-red-400'     }
+  if (s == null) return { label: '—', color: 'text-slate-400' }
+  if (s < 100)   return { label: 'Normal',    color: 'text-emerald-400' }
+  if (s < 126)   return { label: 'Pre-Diab.', color: 'text-yellow-400' }
+  return                { label: 'Diabetic',  color: 'text-red-400'    }
 }
 
 // ── Stat card ────────────────────────────────────────────────────────────────
-const StatCard = ({ title, value, unit, icon: Icon, iconBg, iconColor, blobColor, trend, trendVal, chartData, chartKey, chartColor, badge }) => (
+const StatCard = ({ title, value, unit, icon: Icon, iconBg, iconColor, blobColor, trendDir, trendVal, chartData, chartKey, chartColor, badge, lastDate }) => (
   <div className="stat-card">
     <div className={`absolute top-0 right-0 w-24 h-24 ${blobColor} rounded-full -mr-8 -mt-8 blur-2xl`} />
     <div className="flex items-start justify-between mb-3">
@@ -68,22 +70,29 @@ const StatCard = ({ title, value, unit, icon: Icon, iconBg, iconColor, blobColor
         <Icon className={`w-5 h-5 ${iconColor}`} />
       </div>
     </div>
-    {badge && (
-      <p className={`text-xs font-mono font-semibold mb-1 ${badge.color}`}>{badge.label}</p>
-    )}
-    {trendVal !== null && (
+
+    {badge && <p className={`text-xs font-mono font-semibold mb-1 ${badge.color}`}>{badge.label}</p>}
+
+    {/* Trend row — only when we have a real numeric diff */}
+    {trendVal != null && !isNaN(trendVal) && Number(trendVal) !== 0 && (
       <div className="flex items-center gap-1 mb-2">
-        {trend === 'down'
+        {trendDir === 'down'
           ? <TrendingDown className="w-3 h-3 text-emerald-400" />
           : <TrendingUp   className="w-3 h-3 text-red-400" />}
-        <span className={`text-xs font-mono ${trend === 'down' ? 'text-emerald-400' : 'text-red-400'}`}>
-          {trend === 'down' ? '▼' : '▲'} {trendVal} from last
+        <span className={`text-xs font-mono ${trendDir === 'down' ? 'text-emerald-400' : 'text-red-400'}`}>
+          {trendDir === 'down' ? '▼' : '▲'} {trendVal} from last
         </span>
       </div>
     )}
-    {chartData?.length > 1 && (
-      <MiniChart data={chartData} dataKey={chartKey} color={chartColor} />
+
+    {/* Last recorded date for this specific metric */}
+    {lastDate && (
+      <p className="text-slate-600 text-xs font-body mb-1">
+        Recorded {format(new Date(lastDate), 'MMM d, yyyy')}
+      </p>
     )}
+
+    <MiniChart data={chartData} dataKey={chartKey} color={chartColor} />
   </div>
 )
 
@@ -102,7 +111,7 @@ const EmptyVitals = () => (
   </div>
 )
 
-// ── Skeleton loader ──────────────────────────────────────────────────────────
+// ── Skeleton ─────────────────────────────────────────────────────────────────
 const Skeleton = () => (
   <div className="stat-card animate-pulse">
     <div className="h-4 w-24 bg-slate-800 rounded mb-3" />
@@ -111,35 +120,53 @@ const Skeleton = () => (
   </div>
 )
 
-// ── Mock appointments (replace with API call when ready) ────────────────────
+// ── Mock appointments ────────────────────────────────────────────────────────
 const appointments = [
   { doctor: 'Dr. Priya Mehta',  specialty: 'Cardiologist',    time: '10:30 AM', date: 'Tomorrow', status: 'confirmed' },
   { doctor: 'Dr. Rajan Gupta',  specialty: 'Endocrinologist', time: '3:00 PM',  date: 'Jul 18',   status: 'pending'   },
 ]
 
-// ── Main Dashboard ───────────────────────────────────────────────────────────
+// ── Dashboard ────────────────────────────────────────────────────────────────
 export default function Dashboard() {
-  const { user, patient, vitals, loadingVitals, fetchHealthRecords, healthRecords } = useApp()
+  const {
+    user, patient,
+    vitals,         // sparkline series
+    latestVitals,   // per-metric latest values from /dashboard API
+    loadingVitals,
+    refreshAll,
+    healthRecords,
+  } = useApp()
 
-  const today  = new Date()
-  const latest = vitals[vitals.length - 1]
-  const prev   = vitals.length >= 2 ? vitals[vitals.length - 2] : null
+  const today = new Date()
 
-  // Trends (null-safe)
-  const bpDiff     = latest && prev ? Math.abs((latest.bp_sys ?? 0) - (prev.bp_sys ?? 0)) : null
-  const bpDown     = latest && prev ? (latest.bp_sys ?? 0) < (prev.bp_sys ?? 0) : null
-  const sugarDiff  = latest && prev ? Math.abs((latest.sugar ?? 0) - (prev.sugar ?? 0)) : null
-  const sugarDown  = latest && prev ? (latest.sugar ?? 0) < (prev.sugar ?? 0) : null
-  const weightDiff = latest && prev ? Math.abs((latest.weight ?? 0) - (prev.weight ?? 0)).toFixed(1) : null
-  const weightDown = latest && prev ? (latest.weight ?? 0) < (prev.weight ?? 0) : null
+  // ── Trends: compare per-metric across the sparkline series ───────────────
+  // Filter only records that actually have the metric, then take last 2.
+  const bpPoints     = vitals.filter(v => v.bp_sys  != null)
+  const sugarPoints  = vitals.filter(v => v.sugar   != null)
+  const weightPoints = vitals.filter(v => v.weight  != null)
 
-  // Recent records table (last 5)
+  const trend = (points, key) => {
+    if (points.length < 2) return { dir: null, val: null }
+    const prev = points[points.length - 2][key]
+    const curr = points[points.length - 1][key]
+    if (prev == null || curr == null) return { dir: null, val: null }
+    const diff = Math.abs(curr - prev)
+    return { dir: curr < prev ? 'down' : 'up', val: +diff.toFixed(1) }
+  }
+
+  const bpTrend     = trend(bpPoints,     'bp_sys')
+  const sugarTrend  = trend(sugarPoints,  'sugar')
+  const weightTrend = trend(weightPoints, 'weight')
+
+  // Has the user logged anything at all?
+  const hasAnyData = latestVitals.bp_sys != null || latestVitals.sugar != null || latestVitals.weight != null
+
   const recentRecords = [...healthRecords].slice(0, 5)
 
   return (
     <div className="space-y-6">
 
-      {/* ── Hero greeting ─────────────────────────────────────────────── */}
+      {/* ── Hero ──────────────────────────────────────────────────────── */}
       <div className="glass rounded-3xl p-6 lg:p-8 relative overflow-hidden border border-emerald-500/10">
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-cyan-500/5" />
         <div className="relative flex flex-col lg:flex-row lg:items-center gap-6">
@@ -151,7 +178,7 @@ export default function Dashboard() {
               Good {greet()}, {user?.name?.split(' ')[0] ?? 'there'} 👋
             </h1>
             <p className="text-slate-400 font-body text-sm max-w-md">
-              {vitals.length > 0
+              {hasAnyData
                 ? 'Your latest readings are in. Stay consistent with your logging!'
                 : 'Welcome! Start logging your vitals to see trends and insights.'}
             </p>
@@ -169,7 +196,7 @@ export default function Dashboard() {
 
           <div className="flex items-center gap-3 self-start lg:self-auto">
             <button
-              onClick={fetchHealthRecords}
+              onClick={refreshAll}
               disabled={loadingVitals}
               className="w-10 h-10 glass rounded-xl flex items-center justify-center text-slate-400 hover:text-emerald-400 transition-colors disabled:opacity-40"
               title="Refresh"
@@ -194,11 +221,9 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <h3 className="section-title mb-0">Today's Vitals</h3>
-            {latest?.date && (
-              <p className="section-subtitle mt-0.5">
-                Last updated: {format(new Date(latest.date), 'MMM d, yyyy')}
-              </p>
-            )}
+            <p className="section-subtitle mt-0.5 text-slate-500 text-xs">
+              Each metric shows its own most recent reading
+            </p>
           </div>
           <Link
             to="/records"
@@ -211,35 +236,44 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {loadingVitals ? (
             <><Skeleton /><Skeleton /><Skeleton /></>
-          ) : vitals.length === 0 ? (
+          ) : !hasAnyData ? (
             <EmptyVitals />
           ) : (
             <>
-              {/* BP */}
+              {/* Blood Pressure */}
               <StatCard
                 title="Blood Pressure" unit="mmHg"
-                value={latest?.bp_sys != null ? <>{latest.bp_sys}<span className="text-slate-500 text-xl">/{latest.bp_dia}</span></> : null}
+                value={
+                  latestVitals.bp_sys != null
+                    ? <>{latestVitals.bp_sys}<span className="text-slate-500 text-xl">/{latestVitals.bp_dia}</span></>
+                    : null
+                }
                 icon={Heart} iconBg="bg-rose-500/10" iconColor="text-rose-400" blobColor="bg-rose-500/5"
-                trend={bpDown ? 'down' : 'up'} trendVal={bpDiff}
+                trendDir={bpTrend.dir} trendVal={bpTrend.val}
                 chartData={vitals} chartKey="bp_sys" chartColor="#f43f5e"
-                badge={bpCategory(latest?.bp_sys)}
+                badge={bpCategory(latestVitals.bp_sys)}
+                lastDate={latestVitals.bp_date}
               />
-              {/* Sugar */}
+
+              {/* Blood Sugar */}
               <StatCard
                 title="Blood Sugar" unit="mg/dL (Fasting)"
-                value={latest?.sugar}
+                value={latestVitals.sugar}
                 icon={Droplets} iconBg="bg-amber-500/10" iconColor="text-amber-400" blobColor="bg-amber-500/5"
-                trend={sugarDown ? 'down' : 'up'} trendVal={sugarDiff}
+                trendDir={sugarTrend.dir} trendVal={sugarTrend.val}
                 chartData={vitals} chartKey="sugar" chartColor="#f59e0b"
-                badge={sugarCategory(latest?.sugar)}
+                badge={sugarCategory(latestVitals.sugar)}
+                lastDate={latestVitals.sugar_date}
               />
+
               {/* Weight */}
               <StatCard
                 title="Weight" unit="kg"
-                value={latest?.weight}
+                value={latestVitals.weight}
                 icon={Weight} iconBg="bg-cyan-500/10" iconColor="text-cyan-400" blobColor="bg-cyan-500/5"
-                trend={weightDown ? 'down' : 'up'} trendVal={weightDiff}
+                trendDir={weightTrend.dir} trendVal={weightTrend.val}
                 chartData={vitals} chartKey="weight" chartColor="#22d3ee"
+                lastDate={latestVitals.weight_date}
               />
             </>
           )}
@@ -271,7 +305,6 @@ export default function Dashboard() {
       {/* ── Appointments + Recent Records ────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Appointments */}
         <div className="glass rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display font-bold text-white text-base">Upcoming Appointments</h3>
@@ -300,7 +333,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Health Records */}
         <div className="glass rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display font-bold text-white text-base">Recent Records</h3>
@@ -329,9 +361,9 @@ export default function Dashboard() {
                       {r.date ? format(new Date(r.date), 'MMM d, yyyy') : '—'}
                     </p>
                     <div className="flex flex-wrap gap-2 mt-0.5">
-                      {r.bpSystolic   && <span className="text-rose-400  text-xs font-body">{r.bpSystolic}/{r.bpDiastolic} mmHg</span>}
+                      {r.bpSystolic        && <span className="text-rose-400  text-xs font-body">{r.bpSystolic}/{r.bpDiastolic} mmHg</span>}
                       {r.bloodSugar?.value && <span className="text-amber-400 text-xs font-body">{r.bloodSugar.value} mg/dL</span>}
-                      {r.weightKg     && <span className="text-cyan-400  text-xs font-body">{r.weightKg} kg</span>}
+                      {r.weightKg         && <span className="text-cyan-400  text-xs font-body">{r.weightKg} kg</span>}
                     </div>
                   </div>
                 </div>
@@ -360,7 +392,7 @@ export default function Dashboard() {
   )
 }
 
-// ── Utility helpers ──────────────────────────────────────────────────────────
+// ── Utilities ────────────────────────────────────────────────────────────────
 function greet() {
   const h = new Date().getHours()
   if (h < 12) return 'morning'

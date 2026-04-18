@@ -17,7 +17,7 @@ const fmtTime = (d) =>
 
 const bpStatus = (sys, dia) => {
   if (!sys || !dia) return null;
-  if (sys < 120 && dia < 80) return { label: 'Normal', color: 'emerald' };
+  if (sys < 120 && dia < 80) return { label: 'Normal',  color: 'emerald' };
   if (sys < 130 && dia < 80) return { label: 'Elevated', color: 'yellow' };
   if (sys < 140 || dia < 90) return { label: 'Stage 1', color: 'orange' };
   return { label: 'Stage 2', color: 'red' };
@@ -26,12 +26,12 @@ const bpStatus = (sys, dia) => {
 const sugarStatus = (val, type) => {
   if (!val) return null;
   if (type === 'fasting') {
-    if (val < 100) return { label: 'Normal', color: 'emerald' };
-    if (val < 126) return { label: 'Pre-diabetic', color: 'yellow' };
+    if (val < 100) return { label: 'Normal',       color: 'emerald' };
+    if (val < 126) return { label: 'Pre-diabetic', color: 'yellow'  };
     return { label: 'Diabetic', color: 'red' };
   }
-  if (val < 140) return { label: 'Normal', color: 'emerald' };
-  if (val < 200) return { label: 'Pre-diabetic', color: 'yellow' };
+  if (val < 140) return { label: 'Normal',       color: 'emerald' };
+  if (val < 200) return { label: 'Pre-diabetic', color: 'yellow'  };
   return { label: 'Diabetic', color: 'red' };
 };
 
@@ -63,12 +63,10 @@ const activeSectionStyle = {
   sky:    'border-sky-500 bg-sky-500/20 text-sky-300',
 };
 
-// ─── Reusable form primitives ─────────────────────────────────────────────────
+// ─── Form primitives ──────────────────────────────────────────────────────────
 const Field = ({ label, error, children, hint }) => (
   <div className="space-y-1.5">
-    <label className="block text-slate-300 text-xs font-semibold uppercase tracking-widest">
-      {label}
-    </label>
+    <label className="block text-slate-300 text-xs font-semibold uppercase tracking-widest">{label}</label>
     {children}
     {hint && !error && <p className="text-slate-600 text-xs">{hint}</p>}
     {error && (
@@ -151,7 +149,6 @@ const RecordCard = ({ record, onDelete, index }) => {
       className="group relative bg-slate-800/40 border border-slate-700/40 rounded-2xl p-5
         hover:border-slate-600/60 hover:bg-slate-800/60 transition-all"
     >
-      {/* date + delete */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2 text-slate-400 text-xs">
           <Calendar className="w-3.5 h-3.5" />
@@ -169,7 +166,6 @@ const RecordCard = ({ record, onDelete, index }) => {
         </button>
       </div>
 
-      {/* vitals grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {record.bpSystolic && (
           <div className="bg-rose-500/8 border border-rose-500/20 rounded-xl p-3">
@@ -177,9 +173,7 @@ const RecordCard = ({ record, onDelete, index }) => {
               <Heart className="w-3.5 h-3.5 text-rose-400" fill="currentColor" />
               <span className="text-rose-400 text-xs font-semibold">Blood Pressure</span>
             </div>
-            <p className="text-white font-bold font-mono text-lg">
-              {record.bpSystolic}/{record.bpDiastolic}
-            </p>
+            <p className="text-white font-bold font-mono text-lg">{record.bpSystolic}/{record.bpDiastolic}</p>
             <p className="text-slate-500 text-xs">mmHg</p>
             {bp && (
               <span className={`mt-1.5 inline-flex text-xs px-2 py-0.5 rounded-full border ${statusColors[bp.color]}`}>
@@ -195,9 +189,7 @@ const RecordCard = ({ record, onDelete, index }) => {
               <Droplets className="w-3.5 h-3.5 text-amber-400" />
               <span className="text-amber-400 text-xs font-semibold">Blood Sugar</span>
             </div>
-            <p className="text-white font-bold font-mono text-lg">
-              {record.bloodSugar.value}
-            </p>
+            <p className="text-white font-bold font-mono text-lg">{record.bloodSugar.value}</p>
             <p className="text-slate-500 text-xs">mg/dL · {record.bloodSugar.type}</p>
             {sugar && (
               <span className={`mt-1.5 inline-flex text-xs px-2 py-0.5 rounded-full border ${statusColors[sugar.color]}`}>
@@ -215,20 +207,17 @@ const RecordCard = ({ record, onDelete, index }) => {
             </div>
             <p className="text-white font-bold font-mono text-lg">{record.weightKg}</p>
             <p className="text-slate-500 text-xs">kg</p>
-            {record.bmi && (
-              <p className="text-violet-300 text-xs mt-1">BMI {record.bmi}</p>
-            )}
+            {record.bmi && <p className="text-violet-300 text-xs mt-1">BMI {record.bmi}</p>}
           </div>
         )}
       </div>
 
-      {/* notes */}
       {(record.notes || record.mealTime) && (
         <div className="mt-3 pt-3 border-t border-slate-700/40 flex items-start gap-2">
           <FileText className="w-3.5 h-3.5 text-slate-500 mt-0.5 flex-shrink-0" />
           <div className="text-xs text-slate-400 space-y-0.5">
             {record.mealTime && <p><span className="text-slate-500">Meal:</span> {record.mealTime}</p>}
-            {record.notes && <p>{record.notes}</p>}
+            {record.notes    && <p>{record.notes}</p>}
           </div>
         </div>
       )}
@@ -238,14 +227,14 @@ const RecordCard = ({ record, onDelete, index }) => {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function HealthRecords() {
-  const { token, backendUrl } = useContext(AppContext);
+  const { token, backendUrl, refreshAll } = useContext(AppContext);
 
-  const [records, setRecords]           = useState([]);
-  const [loading, setLoading]           = useState(false);
-  const [showForm, setShowForm]         = useState(false);
-  const [submitting, setSubmitting]     = useState(false);
+  const [records, setRecords]               = useState([]);
+  const [loading, setLoading]               = useState(false);
+  const [showForm, setShowForm]             = useState(false);
+  const [submitting, setSubmitting]         = useState(false);
   const [activeSections, setActiveSections] = useState(['bp']);
-  const [errors, setErrors]             = useState({});
+  const [errors, setErrors]                 = useState({});
 
   const [form, setForm] = useState({
     date:        new Date().toISOString().slice(0, 16),
@@ -255,8 +244,7 @@ export default function HealthRecords() {
     mealTime:    '', notes: '',
   });
 
-  // ── fetch records ─────────────────────────────────────────────────────────
-  // Uses /api/patient/health — patientId comes from JWT on the server
+  // ── local fetch ───────────────────────────────────────────────────────────
   const fetchRecords = useCallback(async () => {
     if (!token) return;
     setLoading(true);
@@ -265,11 +253,8 @@ export default function HealthRecords() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (res.ok) {
-        setRecords(data.records ?? []);
-      } else {
-        toast.error(data.message || 'Failed to load records');
-      }
+      if (res.ok) setRecords(data.records ?? []);
+      else toast.error(data.message || 'Failed to load records');
     } catch {
       toast.error('Network error loading records');
     } finally {
@@ -279,7 +264,6 @@ export default function HealthRecords() {
 
   useEffect(() => { fetchRecords(); }, [fetchRecords]);
 
-  // ── toggle section tabs ────────────────────────────────────────────────────
   const toggleSection = (id) =>
     setActiveSections(prev =>
       prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
@@ -289,22 +273,20 @@ export default function HealthRecords() {
 
   // ── validation ─────────────────────────────────────────────────────────────
   const validate = () => {
-    const e   = {};
+    const e = {};
     const hasBP     = activeSections.includes('bp');
     const hasSugar  = activeSections.includes('sugar');
     const hasWeight = activeSections.includes('weight');
 
     if (hasBP) {
-      if (form.bpSystolic  && (form.bpSystolic  < 60  || form.bpSystolic  > 300))
-        e.bpSystolic  = 'Must be 60–300';
-      if (form.bpDiastolic && (form.bpDiastolic < 40  || form.bpDiastolic > 200))
-        e.bpDiastolic = 'Must be 40–200';
+      if (form.bpSystolic  && (form.bpSystolic  < 60  || form.bpSystolic  > 300)) e.bpSystolic  = 'Must be 60–300';
+      if (form.bpDiastolic && (form.bpDiastolic < 40  || form.bpDiastolic > 200)) e.bpDiastolic = 'Must be 40–200';
       if ((form.bpSystolic && !form.bpDiastolic) || (!form.bpSystolic && form.bpDiastolic))
         e.bpDiastolic = 'Both systolic & diastolic required';
     }
-    if (hasSugar  && form.sugarValue  && form.sugarValue  < 0) e.sugarValue  = 'Must be positive';
-    if (hasWeight && form.weightKg    && (form.weightKg   < 10  || form.weightKg   > 500)) e.weightKg  = 'Must be 10–500 kg';
-    if (hasWeight && form.heightCm    && (form.heightCm   < 50  || form.heightCm   > 300)) e.heightCm  = 'Must be 50–300 cm';
+    if (hasSugar  && form.sugarValue && form.sugarValue  < 0) e.sugarValue = 'Must be positive';
+    if (hasWeight && form.weightKg   && (form.weightKg   < 10 || form.weightKg  > 500)) e.weightKg = 'Must be 10–500 kg';
+    if (hasWeight && form.heightCm   && (form.heightCm   < 50 || form.heightCm  > 300)) e.heightCm = 'Must be 50–300 cm';
 
     const hasAny =
       (hasBP     && form.bpSystolic && form.bpDiastolic) ||
@@ -317,11 +299,9 @@ export default function HealthRecords() {
   };
 
   // ── submit ─────────────────────────────────────────────────────────────────
-  // POST to /api/patient/health — server reads patientId from req.user.id (JWT)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-
     setSubmitting(true);
     try {
       const payload = { date: new Date(form.date).toISOString() };
@@ -345,11 +325,8 @@ export default function HealthRecords() {
 
       const res  = await fetch(`${backendUrl}/api/patient/health`, {
         method:  'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization:  `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body:    JSON.stringify(payload),
       });
       const data = await res.json();
 
@@ -357,15 +334,17 @@ export default function HealthRecords() {
         toast.success('Health record saved!');
         setShowForm(false);
         setForm({
-          date:       new Date().toISOString().slice(0, 16),
+          date: new Date().toISOString().slice(0, 16),
           bpSystolic: '', bpDiastolic: '',
           sugarValue: '', sugarType: 'fasting',
-          weightKg:   '', heightCm: '',
-          mealTime:   '', notes: '',
+          weightKg: '',   heightCm: '',
+          mealTime: '',   notes: '',
         });
         setActiveSections(['bp']);
         setErrors({});
-        fetchRecords();
+        // Refresh local list AND context (dashboard vitals + sparklines)
+        await fetchRecords();
+        refreshAll();
       } else {
         toast.error(data.message || 'Failed to save record');
       }
@@ -386,6 +365,7 @@ export default function HealthRecords() {
       });
       if (res.ok) {
         setRecords(r => r.filter(x => x._id !== id));
+        refreshAll(); // keep dashboard in sync
         toast.success('Record deleted');
       } else {
         toast.error('Could not delete');
@@ -398,7 +378,6 @@ export default function HealthRecords() {
   // ─── render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#0a0f1e] text-white">
-      {/* bg glow */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/3 w-96 h-96 bg-emerald-900/20 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-teal-900/15 rounded-full blur-3xl" />
@@ -406,7 +385,7 @@ export default function HealthRecords() {
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-8">
 
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-white">Health Records</h1>
@@ -423,8 +402,7 @@ export default function HealthRecords() {
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
             <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
               onClick={() => setShowForm(true)}
               className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r
                 from-emerald-500 to-teal-600 text-white text-sm font-semibold
@@ -436,7 +414,7 @@ export default function HealthRecords() {
           </div>
         </div>
 
-        {/* ── Modal ── */}
+        {/* Modal */}
         <AnimatePresence>
           {showForm && (
             <>
@@ -455,7 +433,6 @@ export default function HealthRecords() {
                   w-full sm:max-w-xl bg-slate-900 border border-slate-700/60
                   rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden"
               >
-                {/* modal header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center">
@@ -463,41 +440,26 @@ export default function HealthRecords() {
                     </div>
                     <h2 className="text-base font-bold text-white">New Health Record</h2>
                   </div>
-                  <button
-                    onClick={() => setShowForm(false)}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all"
-                  >
+                  <button onClick={() => setShowForm(false)} className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 <div className="overflow-y-auto max-h-[80vh] px-6 py-5 space-y-6">
-                  {/* Date & time */}
                   <Field label="Date & Time">
-                    <Input
-                      type="datetime-local"
-                      value={form.date}
-                      onChange={e => set('date', e.target.value)}
-                    />
+                    <Input type="datetime-local" value={form.date} onChange={e => set('date', e.target.value)} />
                   </Field>
 
-                  {/* Section toggles */}
                   <div>
-                    <p className="text-slate-500 text-xs uppercase tracking-widest mb-3 font-semibold">
-                      Select what to log
-                    </p>
+                    <p className="text-slate-500 text-xs uppercase tracking-widest mb-3 font-semibold">Select what to log</p>
                     <div className="grid grid-cols-2 gap-2">
                       {SECTIONS.map(({ id, label, icon: Icon, color }) => {
                         const active = activeSections.includes(id);
                         return (
                           <button
-                            key={id}
-                            type="button"
-                            onClick={() => toggleSection(id)}
-                            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border
-                              text-xs font-semibold transition-all
-                              ${active ? activeSectionStyle[color] : sectionRing[color]}
-                              hover:opacity-90`}
+                            key={id} type="button" onClick={() => toggleSection(id)}
+                            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-xs font-semibold transition-all
+                              ${active ? activeSectionStyle[color] : sectionRing[color]} hover:opacity-90`}
                           >
                             <Icon className="w-3.5 h-3.5" />
                             {label}
@@ -509,22 +471,14 @@ export default function HealthRecords() {
                   </div>
 
                   {errors._general && (
-                    <p className="text-red-400 text-xs flex items-center gap-1.5 bg-red-500/10
-                      border border-red-500/20 px-3 py-2 rounded-lg">
-                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                      {errors._general}
+                    <p className="text-red-400 text-xs flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {errors._general}
                     </p>
                   )}
 
-                  {/* ── Blood Pressure ── */}
                   <AnimatePresence>
                     {activeSections.includes('bp') && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                         <div className="p-4 bg-rose-500/5 border border-rose-500/20 rounded-xl space-y-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Heart className="w-4 h-4 text-rose-400" fill="currentColor" />
@@ -532,42 +486,24 @@ export default function HealthRecords() {
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                             <Field label="Systolic (mmHg)" error={errors.bpSystolic}>
-                              <Input
-                                type="number" placeholder="120" min="60" max="300"
-                                value={form.bpSystolic}
-                                onChange={e => set('bpSystolic', e.target.value)}
-                              />
+                              <Input type="number" placeholder="120" min="60" max="300" value={form.bpSystolic} onChange={e => set('bpSystolic', e.target.value)} />
                             </Field>
                             <Field label="Diastolic (mmHg)" error={errors.bpDiastolic}>
-                              <Input
-                                type="number" placeholder="80" min="40" max="200"
-                                value={form.bpDiastolic}
-                                onChange={e => set('bpDiastolic', e.target.value)}
-                              />
+                              <Input type="number" placeholder="80" min="40" max="200" value={form.bpDiastolic} onChange={e => set('bpDiastolic', e.target.value)} />
                             </Field>
                           </div>
                           {form.bpSystolic && form.bpDiastolic && (() => {
                             const s = bpStatus(+form.bpSystolic, +form.bpDiastolic);
-                            return s ? (
-                              <span className={`text-xs px-2.5 py-1 rounded-full border ${statusColors[s.color]}`}>
-                                {s.label}
-                              </span>
-                            ) : null;
+                            return s ? <span className={`text-xs px-2.5 py-1 rounded-full border ${statusColors[s.color]}`}>{s.label}</span> : null;
                           })()}
                         </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
 
-                  {/* ── Blood Sugar ── */}
                   <AnimatePresence>
                     {activeSections.includes('sugar') && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                         <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Droplets className="w-4 h-4 text-amber-400" />
@@ -575,11 +511,7 @@ export default function HealthRecords() {
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                             <Field label="Value (mg/dL)" error={errors.sugarValue}>
-                              <Input
-                                type="number" placeholder="110" min="0"
-                                value={form.sugarValue}
-                                onChange={e => set('sugarValue', e.target.value)}
-                              />
+                              <Input type="number" placeholder="110" min="0" value={form.sugarValue} onChange={e => set('sugarValue', e.target.value)} />
                             </Field>
                             <Field label="Test Type">
                               <Select value={form.sugarType} onChange={e => set('sugarType', e.target.value)}>
@@ -592,26 +524,16 @@ export default function HealthRecords() {
                           </div>
                           {form.sugarValue && (() => {
                             const s = sugarStatus(+form.sugarValue, form.sugarType);
-                            return s ? (
-                              <span className={`text-xs px-2.5 py-1 rounded-full border ${statusColors[s.color]}`}>
-                                {s.label}
-                              </span>
-                            ) : null;
+                            return s ? <span className={`text-xs px-2.5 py-1 rounded-full border ${statusColors[s.color]}`}>{s.label}</span> : null;
                           })()}
                         </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
 
-                  {/* ── Weight & BMI ── */}
                   <AnimatePresence>
                     {activeSections.includes('weight') && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                         <div className="p-4 bg-violet-500/5 border border-violet-500/20 rounded-xl space-y-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Scale className="w-4 h-4 text-violet-400" />
@@ -619,34 +541,21 @@ export default function HealthRecords() {
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                             <Field label="Weight (kg)" error={errors.weightKg}>
-                              <Input
-                                type="number" placeholder="72.5" step="0.1" min="10"
-                                value={form.weightKg}
-                                onChange={e => set('weightKg', e.target.value)}
-                              />
+                              <Input type="number" placeholder="72.5" step="0.1" min="10" value={form.weightKg} onChange={e => set('weightKg', e.target.value)} />
                             </Field>
                             <Field label="Height (cm)" hint="Optional override" error={errors.heightCm}>
-                              <Input
-                                type="number" placeholder="170" min="50"
-                                value={form.heightCm}
-                                onChange={e => set('heightCm', e.target.value)}
-                              />
+                              <Input type="number" placeholder="170" min="50" value={form.heightCm} onChange={e => set('heightCm', e.target.value)} />
                             </Field>
                           </div>
                           {form.weightKg && form.heightCm && (() => {
-                            const h   = form.heightCm / 100;
+                            const h = form.heightCm / 100;
                             const bmi = +(form.weightKg / (h * h)).toFixed(1);
-                            const cat = bmi < 18.5 ? { l: 'Underweight', c: 'sky' }
-                              : bmi < 25 ? { l: 'Normal',      c: 'emerald' }
-                              : bmi < 30 ? { l: 'Overweight',  c: 'yellow'  }
-                              : { l: 'Obese', c: 'red' };
+                            const cat = bmi < 18.5 ? { l: 'Underweight', c: 'sky' } : bmi < 25 ? { l: 'Normal', c: 'emerald' } : bmi < 30 ? { l: 'Overweight', c: 'yellow' } : { l: 'Obese', c: 'red' };
                             return (
                               <div className="flex items-center gap-2">
                                 <span className="text-slate-400 text-xs">BMI:</span>
                                 <span className="text-white font-mono font-bold">{bmi}</span>
-                                <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColors[cat.c]}`}>
-                                  {cat.l}
-                                </span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColors[cat.c]}`}>{cat.l}</span>
                               </div>
                             );
                           })()}
@@ -655,15 +564,9 @@ export default function HealthRecords() {
                     )}
                   </AnimatePresence>
 
-                  {/* ── Notes & Meal ── */}
                   <AnimatePresence>
                     {activeSections.includes('notes') && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                         <div className="p-4 bg-sky-500/5 border border-sky-500/20 rounded-xl space-y-4">
                           <div className="flex items-center gap-2 mb-2">
                             <FileText className="w-4 h-4 text-sky-400" />
@@ -682,11 +585,7 @@ export default function HealthRecords() {
                             </Select>
                           </Field>
                           <Field label="Notes">
-                            <Textarea
-                              placeholder="Any symptoms, medication taken, activity level…"
-                              value={form.notes}
-                              onChange={e => set('notes', e.target.value)}
-                            />
+                            <Textarea placeholder="Any symptoms, medication taken, activity level…" value={form.notes} onChange={e => set('notes', e.target.value)} />
                           </Field>
                         </div>
                       </motion.div>
@@ -694,29 +593,22 @@ export default function HealthRecords() {
                   </AnimatePresence>
                 </div>
 
-                {/* modal footer */}
                 <div className="px-6 py-4 border-t border-slate-800 flex gap-3">
                   <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
+                    type="button" onClick={() => setShowForm(false)}
                     className="flex-1 py-3 rounded-xl border border-slate-700 text-slate-400
                       hover:border-slate-600 hover:text-white text-sm font-semibold transition-all"
                   >
                     Cancel
                   </button>
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleSubmit}
-                    disabled={submitting}
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    onClick={handleSubmit} disabled={submitting}
                     className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600
                       text-white text-sm font-semibold flex items-center justify-center gap-2
                       hover:from-emerald-400 hover:to-teal-500 disabled:opacity-60 transition-all"
                   >
-                    {submitting
-                      ? <RefreshCw className="w-4 h-4 animate-spin" />
-                      : <><Check className="w-4 h-4" /> Save Record</>
-                    }
+                    {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4" /> Save Record</>}
                   </motion.button>
                 </div>
               </motion.div>
@@ -724,7 +616,7 @@ export default function HealthRecords() {
           )}
         </AnimatePresence>
 
-        {/* ── Records list ── */}
+        {/* Records list */}
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <RefreshCw className="w-6 h-6 text-emerald-500 animate-spin" />
