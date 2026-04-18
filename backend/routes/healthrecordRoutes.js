@@ -1,6 +1,6 @@
 import express from 'express';
 import { auth } from '../middlewares/auth.js';
-import * as healthController from '../controllers/healthRecordController.js';
+import * as healthController from '../controllers/healthrecordController.js';
 
 const healthrecordRouter = express.Router();
 
