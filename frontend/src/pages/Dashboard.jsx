@@ -33,9 +33,9 @@ const MiniChart = ({ data, dataKey, color }) => {
 
 // ── Quick action cards ───────────────────────────────────────────────────────
 const quickLinks = [
-  { to: '/health-assistent', icon: Stethoscope, label: 'Symptom Checker', desc: 'AI diagnosis help',  color: 'from-pink-500/20 to-rose-500/10',    iconColor: 'text-pink-400',   border: 'border-pink-500/20'   },
+  { to: '/health-assistant', icon: Stethoscope, label: 'Health-Assistant', desc: 'AI diagnosis help',  color: 'from-pink-500/20 to-rose-500/10',    iconColor: 'text-pink-400',   border: 'border-pink-500/20'   },
   { to: '/hospitals',        icon: MapPin,      label: 'Find Hospital',   desc: 'Nearest facilities', color: 'from-indigo-500/20 to-blue-500/10',  iconColor: 'text-indigo-400', border: 'border-indigo-500/20' },
-  { to: '/document',         icon: File,        label: 'Upload Document', desc: 'See & Upload',       color: 'from-teal-500/20 to-cyan-500/10',    iconColor: 'text-teal-400',   border: 'border-teal-500/20'   },
+  { to: '/documents',         icon: File,        label: 'Upload Document', desc: 'See & Upload',       color: 'from-teal-500/20 to-cyan-500/10',    iconColor: 'text-teal-400',   border: 'border-teal-500/20'   },
   { to: '/pharmacy',         icon: ShoppingBag, label: 'Order Medicine',  desc: 'Fast delivery',      color: 'from-orange-500/20 to-amber-500/10', iconColor: 'text-orange-400', border: 'border-orange-500/20' },
 ]
 

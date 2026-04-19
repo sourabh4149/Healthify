@@ -50,6 +50,7 @@ const validateStep = (step, fields) => {
     else if (fields.password.length < 8)  errs.password = 'At least 8 characters';
     else if (!/[A-Z]/.test(fields.password)) errs.password = 'Must include an uppercase letter';
     else if (!/[0-9]/.test(fields.password)) errs.password = 'Must include a number';
+    else if (!/[!@#$%^&*()-+]/.test(fields.password)) errs.password = 'Must include a special character';
 
     if (!fields.confirmPassword)          errs.confirmPassword = 'Please confirm your password';
     else if (fields.confirmPassword !== fields.password) errs.confirmPassword = 'Passwords do not match';

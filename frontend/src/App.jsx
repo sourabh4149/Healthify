@@ -8,7 +8,7 @@ import Profile         from './pages/Profile'
 import HealthRecords   from './pages/HealthRecords'
 import Analytics       from './pages/Analytics'
 import Documents       from './pages/Documents'
-import HealthAssistent from './pages/HealthAssistent'
+import HealthAssistent from './pages/HealthAssistant'
 import Emergency       from './pages/Emergency'
 import Hospitals       from './pages/Hospitals'
 import Pharmacy        from './pages/Pharmacy'
@@ -62,7 +62,7 @@ export default function App() {
             <Route path="records"          element={<HealthRecords />}   />
             <Route path="analytics"        element={<Analytics />}       />
             <Route path="documents"        element={<Documents />}       />
-            <Route path="health-assistent" element={<HealthAssistent />} />
+            <Route path="health-assistant" element={<HealthAssistent />} />
             <Route path="emergency"        element={<Emergency />}       />
             <Route path="hospitals"        element={<Hospitals />}       />
             <Route path="pharmacy"         element={<Pharmacy />}        />

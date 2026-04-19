@@ -3,7 +3,7 @@ import { useState } from 'react'
 import {
   LayoutDashboard, User, Activity, BarChart3, FileText,
   Stethoscope, AlertTriangle, MapPin, ShoppingBag, Video,
-  Menu, X, Heart, Bell, Settings, ChevronRight, LogOut
+  Menu, X, Heart, Settings, ChevronRight, LogOut
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 
@@ -13,7 +13,7 @@ const navItems = [
   { to: '/records',    icon: Activity,        label: 'Health Records',  color: 'text-blue-400'    },
   { to: '/analytics',  icon: BarChart3,       label: 'Analytics',       color: 'text-purple-400'  },
   { to: '/documents',  icon: FileText,        label: 'Documents',       color: 'text-amber-400'   },
-  { to: '/health-assistent',   icon: Stethoscope,     label: 'Health Assistent', color: 'text-pink-400'    },
+  { to: '/health-assistant',   icon: Stethoscope,     label: 'Health Assistent', color: 'text-pink-400'    },
   { to: '/hospitals',  icon: MapPin,          label: 'Nearby Hospitals',color: 'text-indigo-400'  },
   { to: '/pharmacy',   icon: ShoppingBag,     label: 'Pharmacy',        color: 'text-orange-400'  },
 ]
@@ -202,10 +202,7 @@ export default function Layout() {
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            <button className="w-9 h-9 glass rounded-xl flex items-center justify-center text-slate-400 hover:text-emerald-400 transition-colors relative">
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-400 rounded-full" />
-            </button>
+            
             <button
               onClick={() => setShowLogoutConfirm(true)}
               title="Sign out"

@@ -1,3 +1,4 @@
+// src/pages/Analytics.jsx
 import { useState, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
 import { format } from 'date-fns'
@@ -68,36 +69,42 @@ export default function Analytics() {
     const sugar  = data.filter(d => d.sugar  != null)
     const weight = data.filter(d => d.weight != null)
 
-    const bpTrend     = bp.length >= 2
+    const bpTrend    = bp.length >= 2
       ? (((bp[0].bp_sys - bp[bp.length - 1].bp_sys) / bp[0].bp_sys) * 100).toFixed(1)
       : null
-    const sugarTrend  = sugar.length >= 2
+    const sugarTrend = sugar.length >= 2
       ? (((sugar[0].sugar - sugar[sugar.length - 1].sugar) / sugar[0].sugar) * 100).toFixed(1)
       : null
-    const weightLost  = weight.length >= 2
+    const weightLost = weight.length >= 2
       ? (weight[0].weight - weight[weight.length - 1].weight).toFixed(1)
       : null
 
     const latest = data[data.length - 1]
     let score = 100
-    if (latest?.bp_sys  != null && latest.bp_sys  >= 130) score -= 15
-    if (latest?.bp_sys  != null && latest.bp_sys  >= 140) score -= 10
-    if (latest?.sugar   != null && latest.sugar   >= 100) score -= 10
-    if (latest?.sugar   != null && latest.sugar   >= 126) score -= 10
-    if (latest?.weight  != null && latest.weight  >   80) score -= 5
+    if (latest?.bp_sys != null && latest.bp_sys >= 130) score -= 15
+    if (latest?.bp_sys != null && latest.bp_sys >= 140) score -= 10
+    if (latest?.sugar  != null && latest.sugar  >= 100) score -= 10
+    if (latest?.sugar  != null && latest.sugar  >= 126) score -= 10
+    if (latest?.weight != null && latest.weight >   80) score -= 5
     score = Math.max(0, Math.min(100, score))
 
     return { bpTrend, sugarTrend, weightLost, score }
   }, [data])
 
-  // Responsive axis / grid styles
+  // ── Shared axis / grid styles ────────────────────────────────────────────
   const axisStyle = { fill: '#64748b', fontSize: 10, fontFamily: 'JetBrains Mono' }
   const gridStyle = { stroke: 'rgba(100,116,139,0.1)', strokeDasharray: '4 4' }
 
-  // Shorten labels on small screens by slicing data
+  // ── Thin out data if too many points ────────────────────────────────────
   const chartData = data.length > 20
     ? data.filter((_, i) => i % Math.ceil(data.length / 20) === 0 || i === data.length - 1)
     : data
+
+  // ── Shared chart margin & Y-axis width ──────────────────────────────────
+  // Left margin = 0 so the axis labels aren't clipped.
+  // YAxis width = 44 gives 3-digit numbers (e.g. 140) comfortable room.
+  const chartMargin = { top: 6, right: 8, left: 0, bottom: 0 }
+  const yAxisWidth  = 44
 
   if (loadingVitals) {
     return (
@@ -171,7 +178,7 @@ export default function Analytics() {
         <p className="section-subtitle">Trend analysis across all vitals over time</p>
       </div>
 
-      {/* ── Summary cards — 2 cols on mobile, 4 on lg ── */}
+      {/* ── Summary cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {summaryCards.map((s, i) => (
           <div key={i} className="glass rounded-2xl p-3 sm:p-4">
@@ -188,7 +195,7 @@ export default function Analytics() {
         ))}
       </div>
 
-      {/* ── Tabs — horizontally scrollable on mobile ── */}
+      {/* ── Tabs ── */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar">
         {tabs.map(tab => (
           <button
@@ -217,7 +224,7 @@ export default function Analytics() {
               ? <EmptyState message="Log at least 2 blood pressure readings to see trends." />
               : (
               <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                <AreaChart data={chartData} margin={chartMargin}>
                   <defs>
                     <linearGradient id="sysGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor="#f43f5e" stopOpacity={0.3} />
@@ -229,14 +236,26 @@ export default function Analytics() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid {...gridStyle} />
-                  <XAxis dataKey="date" tick={axisStyle} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                  <YAxis tick={axisStyle} axisLine={false} tickLine={false} domain={['auto', 'auto']} width={36} />
+                  <XAxis
+                    dataKey="date"
+                    tick={axisStyle}
+                    axisLine={false}
+                    tickLine={false}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    tick={axisStyle}
+                    axisLine={false}
+                    tickLine={false}
+                    domain={['auto', 'auto']}
+                    width={yAxisWidth}
+                  />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend wrapperStyle={{ fontSize: '11px', color: '#94a3b8', paddingTop: '8px' }} />
                   <ReferenceLine y={120} stroke="#f43f5e" strokeDasharray="6 3" strokeOpacity={0.4}
-                    label={{ value: 'Sys', fill: '#f43f5e', fontSize: 9, position: 'insideTopRight' }} />
+                    label={{ value: 'Sys limit', fill: '#f43f5e', fontSize: 9, position: 'insideTopRight' }} />
                   <ReferenceLine y={80}  stroke="#f97316" strokeDasharray="6 3" strokeOpacity={0.4}
-                    label={{ value: 'Dia', fill: '#f97316', fontSize: 9, position: 'insideTopRight' }} />
+                    label={{ value: 'Dia limit', fill: '#f97316', fontSize: 9, position: 'insideTopRight' }} />
                   <Area connectNulls type="monotone" dataKey="bp_sys" name="Systolic"
                     stroke="#f43f5e" fill="url(#sysGrad)" strokeWidth={2}
                     dot={false} activeDot={{ r: 5 }} />
@@ -255,18 +274,35 @@ export default function Analytics() {
             {data.filter(d => d.pulse_pressure != null).length < 1
               ? <EmptyState message="No blood pressure data to compute pulse pressure." />
               : (
-              <ResponsiveContainer width="100%" height={160}>
+              <ResponsiveContainer width="100%" height={180}>
                 <BarChart
                   data={chartData.filter(d => d.pulse_pressure != null)}
-                  margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+                  margin={chartMargin}
                 >
                   <CartesianGrid {...gridStyle} />
-                  <XAxis dataKey="date" tick={axisStyle} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                  <YAxis tick={axisStyle} axisLine={false} tickLine={false} width={36} />
+                  <XAxis
+                    dataKey="date"
+                    tick={axisStyle}
+                    axisLine={false}
+                    tickLine={false}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    tick={axisStyle}
+                    axisLine={false}
+                    tickLine={false}
+                    width={yAxisWidth}
+                  />
                   <Tooltip content={<CustomTooltip />} />
                   <ReferenceLine y={40} stroke="#10b981" strokeDasharray="4 3" strokeOpacity={0.5} />
                   <ReferenceLine y={60} stroke="#f59e0b" strokeDasharray="4 3" strokeOpacity={0.5} />
-                  <Bar dataKey="pulse_pressure" name="Pulse Pressure" fill="#818cf8" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar
+                    dataKey="pulse_pressure"
+                    name="Pulse Pressure"
+                    fill="#818cf8"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={40}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -283,8 +319,8 @@ export default function Analytics() {
           {data.filter(d => d.sugar != null).length < 2
             ? <EmptyState message="Log at least 2 blood sugar readings to see trends." />
             : (
-            <ResponsiveContainer width="100%" height={260}>
-              <AreaChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart data={chartData} margin={chartMargin}>
                 <defs>
                   <linearGradient id="sugarGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor="#f59e0b" stopOpacity={0.3} />
@@ -292,8 +328,20 @@ export default function Analytics() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid {...gridStyle} />
-                <XAxis dataKey="date" tick={axisStyle} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis tick={axisStyle} axisLine={false} tickLine={false} domain={['auto', 'auto']} width={36} />
+                <XAxis
+                  dataKey="date"
+                  tick={axisStyle}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tick={axisStyle}
+                  axisLine={false}
+                  tickLine={false}
+                  domain={['auto', 'auto']}
+                  width={yAxisWidth}
+                />
                 <Tooltip content={<CustomTooltip />} />
                 <ReferenceLine y={100} stroke="#10b981" strokeDasharray="6 3" strokeOpacity={0.5}
                   label={{ value: 'Normal', fill: '#10b981', fontSize: 9, position: 'insideTopRight' }} />
@@ -319,8 +367,8 @@ export default function Analytics() {
             {data.filter(d => d.weight != null).length < 2
               ? <EmptyState message="Log at least 2 weight entries to see trends." />
               : (
-              <ResponsiveContainer width="100%" height={260}>
-                <AreaChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+              <ResponsiveContainer width="100%" height={280}>
+                <AreaChart data={chartData} margin={chartMargin}>
                   <defs>
                     <linearGradient id="weightGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor="#22d3ee" stopOpacity={0.3} />
@@ -328,8 +376,20 @@ export default function Analytics() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid {...gridStyle} />
-                  <XAxis dataKey="date" tick={axisStyle} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                  <YAxis tick={axisStyle} axisLine={false} tickLine={false} domain={['auto', 'auto']} width={36} />
+                  <XAxis
+                    dataKey="date"
+                    tick={axisStyle}
+                    axisLine={false}
+                    tickLine={false}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    tick={axisStyle}
+                    axisLine={false}
+                    tickLine={false}
+                    domain={['auto', 'auto']}
+                    width={yAxisWidth}
+                  />
                   <Tooltip content={<CustomTooltip />} />
                   <ReferenceLine y={68} stroke="#10b981" strokeDasharray="6 3" strokeOpacity={0.5}
                     label={{ value: 'Target', fill: '#10b981', fontSize: 9, position: 'insideTopRight' }} />
@@ -352,11 +412,22 @@ export default function Analytics() {
           {data.length < 2
             ? <EmptyState message="Not enough data to show combined trends." />
             : (
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={chartData} margin={chartMargin}>
                 <CartesianGrid {...gridStyle} />
-                <XAxis dataKey="date" tick={axisStyle} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis tick={axisStyle} axisLine={false} tickLine={false} width={36} />
+                <XAxis
+                  dataKey="date"
+                  tick={axisStyle}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tick={axisStyle}
+                  axisLine={false}
+                  tickLine={false}
+                  width={yAxisWidth}
+                />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: '11px', color: '#94a3b8', paddingTop: '8px' }} />
                 <Line connectNulls type="monotone" dataKey="bp_sys"  name="Systolic BP"  stroke="#f43f5e" strokeWidth={2} dot={false} />
@@ -369,7 +440,6 @@ export default function Analytics() {
         </ChartCard>
       )}
 
-      {/* ── hide scrollbar on tab strip ── */}
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}`}</style>
     </div>
   )
