@@ -11,44 +11,56 @@ const categoryColors = {
   prescription: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', active: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
   imaging:      { bg: 'bg-purple-500/10',  text: 'text-purple-400',  border: 'border-purple-500/20',  active: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
 }
-const categoryIcons = { diagnostic: '🧪', prescription: '💊', imaging: '🩻' }
+const categoryIcons  = { diagnostic: '🧪', prescription: '💊', imaging: '🩻' }
+const categoryLabels = { diagnostic: 'Diag.', prescription: 'Rx', imaging: 'Img.' } // short labels for mobile
 const filterCategories = ['all', ...CATEGORIES]
 
-// ── Staging item: one file waiting to be uploaded ──────────────────────────
+// ── Staging item ────────────────────────────────────────────────────────────
 function StagingItem({ item, onCategoryChange, onRemove }) {
-  const cat = categoryColors[item.category]
   return (
-    <div className="flex items-center gap-3 bg-slate-800/50 rounded-xl px-4 py-3 border border-slate-700/50">
-      {/* File icon + name */}
-      <div className="text-lg flex-shrink-0">{categoryIcons[item.category]}</div>
-      <div className="flex-1 min-w-0">
-        <p className="text-white text-sm font-display font-semibold truncate">{item.name}</p>
-        <p className="text-slate-500 text-xs font-body mt-0.5">
-          {item.file.type || 'file'} · {(item.file.size / 1024 / 1024).toFixed(1)} MB
-        </p>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-slate-800/50 rounded-xl px-4 py-3 border border-slate-700/50">
+
+      {/* Top row: icon + name + remove */}
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="text-lg flex-shrink-0">{categoryIcons[item.category]}</div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-sm font-display font-semibold truncate">{item.name}</p>
+          <p className="text-slate-500 text-xs font-body mt-0.5">
+            {item.file.type || 'file'} · {(item.file.size / 1024 / 1024).toFixed(1)} MB
+          </p>
+        </div>
+        {/* Remove button – always visible on mobile in top row */}
+        <button
+          onClick={() => onRemove(item.id)}
+          className="sm:hidden w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
       </div>
 
-      {/* Category selector */}
-      <div className="flex gap-1.5 flex-shrink-0">
+      {/* Category buttons – full row on mobile, inline on sm+ */}
+      <div className="flex gap-1.5 flex-wrap sm:flex-nowrap sm:flex-shrink-0">
         {CATEGORIES.map(c => (
           <button
             key={c}
             onClick={() => onCategoryChange(item.id, c)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-display font-semibold border transition-all capitalize ${
+            className={`flex-1 sm:flex-none px-2 py-1 rounded-lg text-xs font-display font-semibold border transition-all capitalize ${
               item.category === c
                 ? categoryColors[c].active
                 : 'bg-slate-700/40 text-slate-400 border-slate-600/40 hover:text-white hover:border-slate-500'
             }`}
           >
-            {c}
+            {/* Short label on mobile, full on sm+ */}
+            <span className="sm:hidden">{categoryLabels[c]}</span>
+            <span className="hidden sm:inline">{c}</span>
           </button>
         ))}
       </div>
 
-      {/* Remove */}
+      {/* Remove – desktop only (mobile remove is inline above) */}
       <button
         onClick={() => onRemove(item.id)}
-        className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
+        className="hidden sm:flex w-7 h-7 items-center justify-center rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
       >
         <X className="w-3.5 h-3.5" />
       </button>
@@ -66,9 +78,7 @@ export default function Documents() {
   const [category, setCategory]   = useState('all')
   const [dragging, setDragging]   = useState(false)
   const [error, setError]         = useState('')
-
-  // Staged files waiting for category confirmation
-  const [staged, setStaged] = useState([])   // [{ id, file, name, category }]
+  const [staged, setStaged]       = useState([])
 
   const fileRef = useRef()
 
@@ -94,13 +104,13 @@ export default function Documents() {
 
   useEffect(() => { fetchDocs() }, [category, search])
 
-  // ── Stage files (don't upload yet) ────────────────────────────────────────
+  // ── Stage files ────────────────────────────────────────────────────────────
   const stageFiles = (files) => {
     const newItems = [...files].map(f => ({
       id:       `${Date.now()}_${Math.random()}`,
       file:     f,
       name:     f.name.replace(/\.[^.]+$/, ''),
-      category: 'diagnostic',   // ← default; user can change it
+      category: 'diagnostic',
     }))
     setStaged(prev => [...prev, ...newItems])
   }
@@ -116,15 +126,13 @@ export default function Documents() {
     e.target.value = ''
   }
 
-  const updateStagedCategory = (id, newCategory) => {
+  const updateStagedCategory = (id, newCategory) =>
     setStaged(prev => prev.map(s => s.id === id ? { ...s, category: newCategory } : s))
-  }
 
-  const removeStagedItem = (id) => {
+  const removeStagedItem = (id) =>
     setStaged(prev => prev.filter(s => s.id !== id))
-  }
 
-  // ── Confirm and upload all staged files ───────────────────────────────────
+  // ── Upload all staged files ────────────────────────────────────────────────
   const uploadAll = async () => {
     if (!staged.length) return
     setError('')
@@ -153,7 +161,6 @@ export default function Documents() {
       }
     }
 
-    // Prepend successfully uploaded docs
     if (uploaded.length) setDocs(prev => [...uploaded, ...prev])
     if (failed.length)   setError(`Some uploads failed:\n${failed.join('\n')}`)
 
@@ -161,7 +168,7 @@ export default function Documents() {
     setUploading(false)
   }
 
-  // ── Delete ─────────────────────────────────────────────────────────────────
+  // ── Delete / View / Download ───────────────────────────────────────────────
   const handleDelete = async (id) => {
     if (!confirm('Delete this document?')) return
     try {
@@ -177,7 +184,6 @@ export default function Documents() {
     }
   }
 
-  // ── View / Download ────────────────────────────────────────────────────────
   const handleView     = (doc) => window.open(doc.url, '_blank')
   const handleDownload = (doc) => {
     Object.assign(document.createElement('a'), {
@@ -185,16 +191,19 @@ export default function Documents() {
     }).click()
   }
 
-  const totalMB  = docs.reduce((acc, d) => acc + parseFloat(d.size || 0), 0)
-  const usedPct  = Math.min((totalMB / 1024) * 100, 100).toFixed(1)
+  const totalMB = docs.reduce((acc, d) => acc + parseFloat(d.size || 0), 0)
+  const usedPct = Math.min((totalMB / 1024) * 100, 100).toFixed(1)
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl w-full space-y-5 px-4 sm:px-0">
+
+      {/* ── Header ── */}
       <div>
         <h2 className="section-title">Documents</h2>
         <p className="section-subtitle">{docs.length} files · Reports, prescriptions &amp; imaging</p>
       </div>
 
+      {/* ── Error banner ── */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl px-4 py-3 text-sm whitespace-pre-line">
           {error}
@@ -208,7 +217,7 @@ export default function Documents() {
         onDragOver={e => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
         onClick={() => fileRef.current.click()}
-        className={`rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition-all duration-200 ${
+        className={`rounded-2xl border-2 border-dashed p-6 sm:p-8 text-center cursor-pointer transition-all duration-200 ${
           dragging
             ? 'border-emerald-400 bg-emerald-400/5'
             : 'border-slate-700 hover:border-slate-600 bg-slate-800/20 hover:bg-slate-800/40'
@@ -222,18 +231,21 @@ export default function Documents() {
           onChange={handleFileInput}
           accept=".pdf,.jpg,.jpeg,.png,.webp,.docx"
         />
-        <div className="w-14 h-14 bg-slate-700/60 rounded-2xl flex items-center justify-center mx-auto mb-3">
-          <Upload className="w-7 h-7 text-slate-400" />
+        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-700/60 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <Upload className="w-6 h-6 sm:w-7 sm:h-7 text-slate-400" />
         </div>
-        <p className="font-display font-semibold text-white">Drop files here or click to select</p>
-        <p className="text-slate-500 text-sm font-body mt-1">PDF, JPG, PNG, WEBP, DOCX — up to 25 MB each</p>
+        <p className="font-display font-semibold text-white text-sm sm:text-base">
+          Drop files here or click to select
+        </p>
+        <p className="text-slate-500 text-xs sm:text-sm font-body mt-1">
+          PDF, JPG, PNG, WEBP, DOCX — up to 25 MB each
+        </p>
       </div>
 
       {/* ── Staging panel ── */}
       {staged.length > 0 && (
-        <div className="glass rounded-2xl p-5 space-y-3 border border-slate-600/40">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-1">
+        <div className="glass rounded-2xl p-4 sm:p-5 space-y-3 border border-slate-600/40">
+          <div className="flex items-start sm:items-center justify-between gap-2 mb-1">
             <div>
               <p className="font-display font-semibold text-white text-sm">
                 {staged.length} file{staged.length > 1 ? 's' : ''} ready to upload
@@ -244,13 +256,12 @@ export default function Documents() {
             </div>
             <button
               onClick={() => setStaged([])}
-              className="text-slate-500 hover:text-slate-300 text-xs underline"
+              className="text-slate-500 hover:text-slate-300 text-xs underline whitespace-nowrap flex-shrink-0"
             >
               clear all
             </button>
           </div>
 
-          {/* File rows */}
           <div className="space-y-2">
             {staged.map(item => (
               <StagingItem
@@ -262,7 +273,6 @@ export default function Documents() {
             ))}
           </div>
 
-          {/* Upload button */}
           <button
             onClick={uploadAll}
             disabled={uploading}
@@ -288,22 +298,25 @@ export default function Documents() {
       )}
 
       {/* ── Filters ── */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3">
+        {/* Search */}
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
-            className="input-field pl-9"
+            className="input-field pl-9 w-full"
             placeholder="Search documents…"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
+
+        {/* Category pills – scrollable on mobile, wrap on larger */}
+        <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 sm:flex-wrap scrollbar-hide">
           {filterCategories.map(c => (
             <button
               key={c}
               onClick={() => setCategory(c)}
-              className={`px-4 py-2 rounded-xl text-xs font-display font-semibold transition-all capitalize whitespace-nowrap ${
+              className={`px-4 py-2 rounded-xl text-xs font-display font-semibold transition-all capitalize whitespace-nowrap flex-shrink-0 ${
                 category === c
                   ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                   : 'glass text-slate-400 hover:text-white'
@@ -332,14 +345,17 @@ export default function Documents() {
           {docs.map(doc => {
             const cat = categoryColors[doc.category] || categoryColors.diagnostic
             return (
-              <div key={doc.id} className="glass glass-hover rounded-2xl p-5 flex items-start gap-4">
-                <div className={`w-12 h-12 rounded-2xl ${cat.bg} border ${cat.border} flex items-center justify-center text-xl flex-shrink-0`}>
+              <div key={doc.id} className="glass glass-hover rounded-2xl p-4 sm:p-5 flex items-start gap-3 sm:gap-4">
+                {/* Category icon */}
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex-shrink-0 ${cat.bg} border ${cat.border} flex items-center justify-center text-lg sm:text-xl`}>
                   {categoryIcons[doc.category] || '📄'}
                 </div>
+
+                {/* Doc info */}
                 <div className="flex-1 min-w-0">
                   <p className="font-display font-semibold text-white text-sm truncate">{doc.name}</p>
-                  <p className="text-slate-400 text-xs font-body mt-0.5">{doc.type} · {doc.size}</p>
-                  <div className="flex items-center gap-2 mt-2">
+                  <p className="text-slate-400 text-xs font-body mt-0.5 truncate">{doc.type} · {doc.size}</p>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span className={`px-2 py-0.5 text-xs font-display rounded-full ${cat.bg} ${cat.text}`}>
                       {doc.category}
                     </span>
@@ -348,17 +364,28 @@ export default function Documents() {
                     </span>
                   </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <button onClick={() => handleView(doc)}
-                    className="w-8 h-8 bg-slate-700/60 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all" title="View">
+
+                {/* Actions – horizontal on mobile, vertical on sm+ */}
+                <div className="flex sm:flex-col gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => handleView(doc)}
+                    className="w-8 h-8 bg-slate-700/60 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                    title="View"
+                  >
                     <Eye className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => handleDownload(doc)}
-                    className="w-8 h-8 bg-slate-700/60 rounded-lg flex items-center justify-center text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all" title="Download">
+                  <button
+                    onClick={() => handleDownload(doc)}
+                    className="w-8 h-8 bg-slate-700/60 rounded-lg flex items-center justify-center text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all"
+                    title="Download"
+                  >
                     <Download className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => handleDelete(doc.id)}
-                    className="w-8 h-8 bg-slate-700/60 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all" title="Delete">
+                  <button
+                    onClick={() => handleDelete(doc.id)}
+                    className="w-8 h-8 bg-slate-700/60 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    title="Delete"
+                  >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -369,13 +396,13 @@ export default function Documents() {
       )}
 
       {/* ── Storage bar ── */}
-      <div className="glass rounded-2xl p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div>
+      <div className="glass rounded-2xl p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <div className="min-w-0">
             <p className="font-display font-semibold text-white text-sm">Storage Used</p>
             <p className="text-slate-400 text-xs font-body">{totalMB.toFixed(1)} MB of 1 GB</p>
           </div>
-          <span className="text-emerald-400 text-xs font-mono">{usedPct}% used</span>
+          <span className="text-emerald-400 text-xs font-mono flex-shrink-0">{usedPct}% used</span>
         </div>
         <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
           <div
